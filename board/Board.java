@@ -5,6 +5,7 @@ import chess.position.Position;
 import chess.utils.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.Serializable;
 
 /**
  *Represents the chess board and manages game logic.
@@ -12,7 +13,7 @@ import java.util.List;
  *Initialises the board with pieces in their starting positions.
  *Detects check, checkmate, and stalemate.
  */
-public class Board
+public class Board implements Serializable
 {
 
     //The 8×8 grid
