@@ -143,7 +143,9 @@ public class Board
 
     //Executes a move unconditionally
     //Updates the grid, moves the piece object, records a capture if any.
-    private void executeMove(Position from, Position to)
+
+    //phase-2 update: changed from private class to public for GUI function
+    public void executeMove(Position from, Position to)
     {
         Piece moving  = grid[from.getRow()][from.getCol()];
         Piece target  = grid[to.getRow()][to.getCol()];
