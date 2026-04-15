@@ -3,6 +3,11 @@ import java.awt.*;
 import java.awt.event.MouseAdapter; //abstract used for recieving mouse clicks
 import java.awt.event.MouseEvent;
 import java.util.Stack;
+//Feature 1 classes 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 // Phase 1 classes
 import chess.board.Board;
 import chess.pieces.Piece;
@@ -60,10 +65,37 @@ public class ChessBoard extends JFrame {
             refreshBoardGUI(); // Updates the visuals
         });
 
-        // Placeholders for Save/Load (add later)
-        saveGameItem.addActionListener(e -> JOptionPane.showMessageDialog(this, "Save Game clicked!"));
-        loadGameItem.addActionListener(e -> JOptionPane.showMessageDialog(this, "Load Game clicked!"));
+        // Logic for saving current board
+        saveGameItem.addActionListener(e -> {
+            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("chess_save.dat"))) {
+                // Write the entire Board object (and all its pieces) to a file
+                out.writeObject(gameLogic);
+                JOptionPane.showMessageDialog(this, "Game Saved Successfully!", "Save Game", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error saving game: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
+        // Logic for loading save file
+        loadGameItem.addActionListener(e -> {
+            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream("chess_save.dat"))) {
+                // Read the file and cast it back into a Board object
+                gameLogic = (Board) in.readObject();
+                
+                // Clear the UI history and stacks so old moves don't conflict
+                moveStack.clear();
+                moveHistoryArea.setText("--- Game Loaded ---\n");
+                
+                // Redraw the visual board with the newly loaded pieces!
+                refreshBoardGUI();
+                
+                JOptionPane.showMessageDialog(this, "Game Loaded Successfully!", "Load Game", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "No save file found, or error loading game.", "Error", JOptionPane.WARNING_MESSAGE);
+            }
+        });
         gameMenu.add(newGameItem);
         gameMenu.add(saveGameItem);
         gameMenu.add(loadGameItem);
