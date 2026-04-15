@@ -12,7 +12,7 @@ public class ChessBoard extends JFrame {
     private JPanel[][] squares = new JPanel[8][8];
     private Board gameLogic; // phase 1 logic
 
-    // NEW: Variables to track the first click in GUI
+    // Variables to track the first click in GUI
     private int sourceRow = -1;
     private int sourceCol = -1;
 
@@ -55,7 +55,7 @@ public class ChessBoard extends JFrame {
                     squares[row][col].add(pieceIcon);
 
                 }
-                // NEW: Add a click listener to the square
+                // Add a click listener to the square
                 final int r = row;
                 final int c = col;
                 squares[row][col].addMouseListener(new MouseAdapter() {
@@ -74,7 +74,7 @@ public class ChessBoard extends JFrame {
         setVisible(true);
     }
 
-    // NEW: Method to handle the two-click logic
+    // Method to handle the two-click logic
     private void handleSquareClick(int row, int col) {
         if (sourceRow == -1 && sourceCol == -1) {
             // FIRST CLICK: Selects a piece
@@ -88,6 +88,19 @@ public class ChessBoard extends JFrame {
             // SECOND CLICK: Moves the piece
             Position from = new Position(sourceRow, sourceCol);
             Position to = new Position(row, col);
+
+            // --- NEW: ENDGAME LOGIC ---
+            // Look at the destination square before we move
+            Piece targetPiece = gameLogic.getGrid()[row][col];
+            boolean isGameOver = false;
+            String winner = "";
+
+            if (targetPiece != null && targetPiece.getClass().getSimpleName().equals("King")) {
+                isGameOver = true;
+                // The winner is the color of the piece making the capture
+                winner = gameLogic.getGrid()[sourceRow][sourceCol].getColor().toString(); 
+            }
+            // --------------------------
             
             // 1. Update the Phase 1 backend (moves piece, records capture) 
             gameLogic.executeMove(from, to);
@@ -107,6 +120,19 @@ public class ChessBoard extends JFrame {
             // Tell Swing to redraw the board to show the changes
             boardPanel.revalidate();
             boardPanel.repaint();
+
+            // --- NEW: TRIGGER POP-UP IF OVER ---
+            if (isGameOver) {
+                // Show the pop-up alert
+                JOptionPane.showMessageDialog(this, 
+                    "Game Over! " + winner + " captured the King and wins!", 
+                    "Endgame Notification", 
+                    JOptionPane.INFORMATION_MESSAGE);
+                
+                // Terminate the game entirely
+                System.exit(0);
+            }
+            // ----------------------------------
             
             // Reset for the next turn
             sourceRow = -1;
