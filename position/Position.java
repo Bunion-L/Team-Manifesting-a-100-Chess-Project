@@ -1,7 +1,10 @@
 package chess.position;
 
+import java.io.Serializable;
+
+
 //Represents a square on the chess board using (row, col) coordinates.
-public class Position
+public class Position implements Serializable
 {
 
     //0-based row index (0 = rank 8, 7 = rank 1)
