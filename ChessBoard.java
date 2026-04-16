@@ -13,6 +13,11 @@ import chess.board.Board;
 import chess.pieces.Piece;
 import chess.position.Position;
 
+/**
+ * The main Graphical User Interface (GUI) class for the Chess Game.
+ * The class extends JFrame and handles the display of the chessboard,
+ * piece movement interactions, game state saving/loading, and move history
+ */
 public class ChessBoard extends JFrame {
     private JPanel boardPanel;
     private JPanel[][] squares = new JPanel[8][8];
@@ -27,6 +32,11 @@ public class ChessBoard extends JFrame {
     private JPanel historyPanel;
     private Stack<MoveRecord> moveStack = new Stack<>(); // The stack to hold moves
 
+    /**
+     * Constructs the ChessBoard GUI.
+     * Initializes the underlying game logic, sets up the main application window size and layout,
+     * and assembles the menu bar, board panel, and move history panel.
+     */
     public ChessBoard() {
         // Initialize Phase 1 board 
         gameLogic = new Board();
@@ -50,6 +60,11 @@ public class ChessBoard extends JFrame {
     }
 
     // Feature 1: Menu
+    /**
+     * Initializes and configures the top menu bar (Feature 1).
+     * Includes controls to start a new game, save the current game state,
+     * and load a previously saved game via serialization
+     */
     private void setupMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         JMenu gameMenu = new JMenu("Game Controls");
@@ -105,6 +120,11 @@ public class ChessBoard extends JFrame {
     }
 
     // Feature 3: History Panel
+    /**
+     * Initializes and configures the Game History panel (Feature 3).
+     * Sets up a text area to track moves and captures, as well as an Undo button
+     * to revert the game state to the previous move
+     */
     private void setupHistoryPanel() {
         historyPanel = new JPanel();
         historyPanel.setLayout(new BorderLayout());
@@ -160,7 +180,11 @@ public class ChessBoard extends JFrame {
         historyPanel.add(undoButton, BorderLayout.SOUTH);
     }
 
-    // New Board setup
+    /**
+     * Initializes the central 8x8 chessboard panel.
+     * Sets up the alternating light and dark squares and attaches mouse click
+     * listeners to each square to handle piece selection and movement
+     */
     private void setupBoardPanel() {
 
         boardPanel = new JPanel(new GridLayout(8, 8));
@@ -193,7 +217,10 @@ public class ChessBoard extends JFrame {
         refreshBoardGUI(); // Draw pieces initially
     }
 
-    // Clears all icons and redraws them based on gameLogic's current state
+    /**
+     * Clears all GUI visual elements from the board and completely redraws them
+     * based on the current state of the backend game logic.
+     */
     private void refreshBoardGUI() {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
@@ -215,7 +242,14 @@ public class ChessBoard extends JFrame {
         boardPanel.repaint();
     }
 
-    // Method to handle two-click logic
+    /**
+     * Handles the logic when a square on the chessboard is clicked.
+     * Implements a two-click system: the first click selects a valid piece,
+     * and the second click executes the move. Also checks for an endgame
+     * condition if a King is captured.
+     * @param row The row index of the clicked square (0-7).
+     * @param col The column index of the clicked square (0-7).
+     */
     private void handleSquareClick(int row, int col) {
         if (sourceRow == -1 && sourceCol == -1) {
             // FIRST CLICK: Selects a piece
@@ -272,20 +306,36 @@ public class ChessBoard extends JFrame {
         }
     }
 
-    // Helper method for Feature 3 to convert (row, col) to e.g., "e4"
+    /**
+     * Converts a 0-indexed row and column coordinate into standard
+     * algebraic chess notation (e.g., column 0, row 4 is "a4").
+     * @param row The row index of the square.
+     * @param col The column index of the square.
+     * @return A String representing the algebraic notation of the square.
+     */
     private String getAlgebraic(int row, int col) {
         char file = (char) ('a' + col);
         int rank = 8 - row;
         return "" + file + rank;
     }
 
-    // undo class
+    /**
+     * A helper class used to record the state of the board before a move is executed.
+     * This snapshot data is required to allow players to successfully undo a move
+     */
     private class MoveRecord {
         Position from;
         Position to;
         Piece movedPiece;
         Piece capturedPiece;
 
+        /**
+         * Constructs a new MoveRecord snapshot
+         * @param from          The starting position of the moved piece.
+         * @param to            The destination position of the moved piece.
+         * @param movedPiece    The actual Piece object that was moved.
+         * @param capturedPiece The Piece object that was captured during the move (can be null).
+         */
         public MoveRecord(Position from, Position to, Piece movedPiece, Piece capturedPiece) {
             this.from = from;
             this.to = to;
@@ -294,8 +344,12 @@ public class ChessBoard extends JFrame {
         }
     }
 
+    /**
+     * Main entry point for the Chess Game application.
+     * Initializes and displays the GUI asynchronously using SwingUtilities.
+     * @param args Command-line arguments (not utilized).
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new ChessBoard());
     }
 }
-
