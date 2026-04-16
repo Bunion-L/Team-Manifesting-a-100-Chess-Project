@@ -31,6 +31,8 @@ public class ChessBoard extends JFrame {
     private JTextArea moveHistoryArea;
     private JPanel historyPanel;
     private Stack<MoveRecord> moveStack = new Stack<>(); // The stack to hold moves
+    private JPanel capturedWhitePanel;
+    private JPanel capturedBlackPanel;
 
     /**
      * Constructs the ChessBoard GUI.
@@ -128,8 +130,20 @@ public class ChessBoard extends JFrame {
     private void setupHistoryPanel() {
         historyPanel = new JPanel();
         historyPanel.setLayout(new BorderLayout());
-        historyPanel.setPreferredSize(new Dimension(200, 600));
+        historyPanel.setPreferredSize(new Dimension(250, 600)); // Made slightly wider for icons
         historyPanel.setBorder(BorderFactory.createTitledBorder("Game Info"));
+
+        // --- NEW: Captured Pieces Visual Area ---
+        capturedWhitePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        capturedWhitePanel.setBorder(BorderFactory.createTitledBorder("Captured White Pieces"));
+        
+        capturedBlackPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        capturedBlackPanel.setBorder(BorderFactory.createTitledBorder("Captured Black Pieces"));
+
+        JPanel capturedContainer = new JPanel(new GridLayout(2, 1));
+        capturedContainer.add(capturedWhitePanel);
+        capturedContainer.add(capturedBlackPanel);
+        // ----------------------------------------
 
         // Text area for move history
         moveHistoryArea = new JTextArea();
@@ -141,41 +155,34 @@ public class ChessBoard extends JFrame {
         undoButton.addActionListener(e -> {
             // Check if there is a move to undo
             if (!moveStack.isEmpty()) {
-                // Pop the last move off the stack
                 MoveRecord lastMove = moveStack.pop();
-                
-                // Restore the backend game logic (Board.java)
                 Piece[][] grid = gameLogic.getGrid();
                 
-                // Move the piece back to its original spot
                 grid[lastMove.from.getRow()][lastMove.from.getCol()] = lastMove.movedPiece;
-                lastMove.movedPiece.setPosition(lastMove.from); // Update internal piece position
+                lastMove.movedPiece.setPosition(lastMove.from); 
                 
-                // Put the captured piece back (or make the square null if nothing was captured)
                 grid[lastMove.to.getRow()][lastMove.to.getCol()] = lastMove.capturedPiece;
                 if (lastMove.capturedPiece != null) {
-                    // Remove it from the captured list in Phase 1's backend
                     gameLogic.getCapturedPieces().remove(lastMove.capturedPiece);
                 }
 
-                // Removes the last line from the History Text Area
                 try {
                     int end = moveHistoryArea.getDocument().getLength();
-                    // Get the start of the previous line (-2 accounts for the newline character)
                     int start = moveHistoryArea.getLineStartOffset(moveHistoryArea.getLineCount() - 2); 
                     moveHistoryArea.getDocument().remove(start, end - start);
                 } catch (Exception ex) {
-                    ex.printStackTrace(); // Failsafe in case of text area errors
+                    ex.printStackTrace(); 
                 }
 
-                // Visually refresh the board to show the undone state
-                refreshBoardGUI();
+                refreshBoardGUI(); 
                 
             } else {
                 JOptionPane.showMessageDialog(this, "No moves to undo!", "Undo", JOptionPane.WARNING_MESSAGE);
             }
         });
 
+        // Add everything to the history panel
+        historyPanel.add(capturedContainer, BorderLayout.NORTH); // Added to the top!
         historyPanel.add(scrollPane, BorderLayout.CENTER);
         historyPanel.add(undoButton, BorderLayout.SOUTH);
     }
@@ -240,6 +247,49 @@ public class ChessBoard extends JFrame {
         }
         boardPanel.revalidate();
         boardPanel.repaint();
+
+        updateCapturedPieces();
+    }
+
+    /**
+     * Reads the captured pieces list from the Phase 1 backend and updates 
+     * the GUI panels to visually display the icons of captured pieces.
+     */
+    private void updateCapturedPieces() {
+
+        //failsafe
+        if (capturedWhitePanel == null || capturedBlackPanel == null) {
+            return; // Exit early if the panels haven't been built yet!
+        }
+        
+        // Clear the panels first
+        capturedWhitePanel.removeAll();
+        capturedBlackPanel.removeAll();
+
+        // Loop through all captured pieces
+        for (Piece p : gameLogic.getCapturedPieces()) {
+            String color = p.getColor().toString(); 
+            String type = p.getClass().getSimpleName(); 
+            String imagePath = "resources/" + color + "_" + type + ".png";
+            
+            // Create the icon, but scale it down so it fits nicely in the side panel!
+            ImageIcon originalIcon = new ImageIcon(imagePath);
+            Image scaledImage = originalIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+            JLabel pieceIcon = new JLabel(new ImageIcon(scaledImage));
+
+            // Add to the correct panel based on piece color
+            if (color.equals("WHITE")) {
+                capturedWhitePanel.add(pieceIcon);
+            } else {
+                capturedBlackPanel.add(pieceIcon);
+            }
+        }
+
+        // Tell the UI to redraw the panels
+        capturedWhitePanel.revalidate();
+        capturedWhitePanel.repaint();
+        capturedBlackPanel.revalidate();
+        capturedBlackPanel.repaint();
     }
 
     /**
