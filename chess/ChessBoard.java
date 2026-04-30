@@ -1,3 +1,5 @@
+package chess;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter; //abstract used for recieving mouse clicks
