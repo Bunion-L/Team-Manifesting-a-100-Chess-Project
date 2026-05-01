@@ -1,19 +1,17 @@
 package chess;
 
-import javax.swing.*;
+import chess.board.Board;
+import chess.pieces.Piece;
+import chess.position.Position; //abstract used for recieving mouse clicks
 import java.awt.*;
-import java.awt.event.MouseAdapter; //abstract used for recieving mouse clicks
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Stack;
-//Feature 1 classes 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-// Phase 1 classes
-import chess.board.Board;
-import chess.pieces.Piece;
-import chess.position.Position;
+import java.util.Stack;
+import javax.swing.*;
 
 /**
  * The main Graphical User Interface (GUI) class for the Chess Game.
@@ -28,6 +26,10 @@ public class ChessBoard extends JFrame {
     // Variables to track the first click in GUI
     private int sourceRow = -1;
     private int sourceCol = -1;
+
+    //Added for phase 3
+    private chess.utils.Color currentTurn = chess.utils.Color.WHITE;
+    private int moveNumber = 1;
 
     // Feature 3 Components 
     private JTextArea moveHistoryArea;
@@ -77,12 +79,9 @@ public class ChessBoard extends JFrame {
         JMenuItem saveGameItem = new JMenuItem("Save Game");
         JMenuItem loadGameItem = new JMenuItem("Load Game");
 
-        // "New Game" Logic: Resets the board and clear history
-        newGameItem.addActionListener(e -> {
-            gameLogic = new Board(); // Phase 1 board creates a fresh game!
-            moveHistoryArea.setText(""); // Clear history
-            refreshBoardGUI(); // Updates the visuals
-        });
+        //"New Game" Logic: Resets the board and clear history
+        //UPDATE FOR PART 3, Now calls resetGame()
+        newGameItem.addActionListener(e -> resetGame());
 
         // Logic for saving current board
         saveGameItem.addActionListener(e -> {
@@ -176,8 +175,10 @@ public class ChessBoard extends JFrame {
                     ex.printStackTrace(); 
                 }
 
-                refreshBoardGUI(); 
-                
+                refreshBoardGUI();
+                //Added for Part 3, Now reverses turn as well 
+                if (currentTurn == chess.utils.Color.BLACK) moveNumber--;
+                currentTurn = currentTurn.opposite();
             } else {
                 JOptionPane.showMessageDialog(this, "No moves to undo!", "Undo", JOptionPane.WARNING_MESSAGE);
             }
@@ -295,6 +296,7 @@ public class ChessBoard extends JFrame {
     }
 
     /**
+     * UPDATED FOR PART 3, Now tracks turns and enforces legal moves
      * Handles the logic when a square on the chessboard is clicked.
      * Implements a two-click system: the first click selects a valid piece,
      * and the second click executes the move. Also checks for an endgame
@@ -302,59 +304,101 @@ public class ChessBoard extends JFrame {
      * @param row The row index of the clicked square (0-7).
      * @param col The column index of the clicked square (0-7).
      */
-    private void handleSquareClick(int row, int col) {
-        if (sourceRow == -1 && sourceCol == -1) {
-            // FIRST CLICK: Selects a piece
-            if (gameLogic.getGrid()[row][col] != null) {
+    private void handleSquareClick(int row, int col)
+    {
+        if(sourceRow == -1 && sourceCol == -1)
+        {
+            //FIRST CLICK: Select a piece belonging to the current player
+            Piece clicked = gameLogic.getGrid()[row][col];
+            if(clicked != null && clicked.getColor() == currentTurn)
+            {
                 sourceRow = row;
                 sourceCol = col;
-                // Highlights the selected square in yellow
                 squares[row][col].setBorder(BorderFactory.createLineBorder(Color.YELLOW, 4));
+
+                //Highlight legal moves in blue
+                Position from = new Position(row, col);
+                for(Position legal : gameLogic.getLegalMoves(clicked))
+                {
+                    squares[legal.getRow()][legal.getCol()].setBorder(BorderFactory.createLineBorder(Color.BLUE, 3));
+                }
             }
-        } else {
-            // SECOND CLICK: Moves the piece
+        }
+        else
+        {
+            //SECOND CLICK: Attempt the move
             Position from = new Position(sourceRow, sourceCol);
-            Position to = new Position(row, col);
-            
-            // Look at the destination square before we move
-            Piece movingPiece = gameLogic.getGrid()[sourceRow][sourceCol];
-            Piece targetPiece = gameLogic.getGrid()[row][col];
-            boolean isGameOver = false;
-            String winner = "";
+            Position to   = new Position(row, col);
 
-            if (targetPiece != null && targetPiece.getClass().getSimpleName().equals("King")) {
-                isGameOver = true;
-                winner = movingPiece.getColor().toString(); 
+            Piece movingPiece  = gameLogic.getGrid()[sourceRow][sourceCol];
+            Piece targetPiece  = gameLogic.getGrid()[row][col];
+
+            //Use Board.movePiece — enforces ownership + legality + check filtering
+            boolean moved = gameLogic.movePiece(from, to, currentTurn);
+
+            if(moved)
+            {
+                //Record for undo
+                moveStack.push(new MoveRecord(from, to, movingPiece, targetPiece));
+
+                //History text
+                String side = (currentTurn == chess.utils.Color.WHITE) ? "White" : "Black";
+                String moveText = moveNumber + ". " + side + " "
+                    + movingPiece.getClass().getSimpleName()
+                    + " " + getAlgebraic(from.getRow(), from.getCol())
+                    + " → " + getAlgebraic(to.getRow(), to.getCol());
+                if(targetPiece != null)
+                {
+                    moveText += " x" + targetPiece.getClass().getSimpleName();
+                }
+
+                //Switch turn
+                chess.utils.Color opponent = currentTurn.opposite();
+
+                //Check/Checkmate/Stalemate detection
+                if(gameLogic.isCheckmate(opponent))
+                {
+                    moveText += " #";
+                    moveHistoryArea.append(moveText + "\n");
+                    refreshBoardGUI();
+                    JOptionPane.showMessageDialog(this,
+                        side + " wins by checkmate!",
+                        "Game Over", JOptionPane.INFORMATION_MESSAGE);
+                    resetGame();
+                    return;
+                }
+                else if(gameLogic.isStalemate(opponent))
+                {
+                    moveHistoryArea.append(moveText + "\n");
+                    refreshBoardGUI();
+                    JOptionPane.showMessageDialog(this,
+                        "Draw by stalemate!",
+                        "Game Over", JOptionPane.INFORMATION_MESSAGE);
+                    resetGame();
+                    return;
+                }
+                else if(gameLogic.isInCheck(opponent))
+                {
+                    moveText += " +";
+                    String oppName = (opponent == chess.utils.Color.WHITE) ? "White" : "Black";
+                    JOptionPane.showMessageDialog(this,
+                        oppName + " is in check!",
+                        "Check", JOptionPane.WARNING_MESSAGE);
+                }
+
+                moveHistoryArea.append(moveText + "\n");
+
+                // Advance turn and move number
+                if(currentTurn == chess.utils.Color.BLACK) moveNumber++;
+                currentTurn = opponent;
+
+                refreshBoardGUI();
             }
 
-            // Save the exact state of the move before we execute it
-            moveStack.push(new MoveRecord(from, to, movingPiece, targetPiece));
-            
-            // Execute Move
-            gameLogic.executeMove(from, to);
-
-            // feature 3: add move to history
-            String moveText = movingPiece.getColor() + " " + movingPiece.getClass().getSimpleName() + 
-                              " moved from " + getAlgebraic(sourceRow, sourceCol) + 
-                              " to " + getAlgebraic(row, col);
-            
-            if (targetPiece != null) {
-                moveText += " (Captured " + targetPiece.getClass().getSimpleName() + ")";
-            }
-            moveHistoryArea.append(moveText + "\n");
-
-            refreshBoardGUI(); // Update visuals
-
-            if (isGameOver) {
-                JOptionPane.showMessageDialog(this, 
-                    "Game Over! " + winner + " captured the King and wins!", 
-                    "Endgame Notification", 
-                    JOptionPane.INFORMATION_MESSAGE);
-                System.exit(0);
-            }
-
+            //Whether the move succeeded or failed, clear selection
             sourceRow = -1;
             sourceCol = -1;
+            refreshBoardGUI(); //clears blue highlights too
         }
     }
 
@@ -394,6 +438,19 @@ public class ChessBoard extends JFrame {
             this.movedPiece = movedPiece;
             this.capturedPiece = capturedPiece;
         }
+    }
+
+    //Called after checkmate or stalemate so a new game doesn't carry over duplicate logic
+    private void resetGame()
+    {
+        gameLogic = new Board();
+        currentTurn = chess.utils.Color.WHITE;
+        moveNumber = 1;
+        moveStack.clear();
+        moveHistoryArea.setText("");
+        sourceRow = -1;
+        sourceCol = -1;
+        refreshBoardGUI();
     }
 
     /**
