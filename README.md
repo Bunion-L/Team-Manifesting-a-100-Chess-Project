@@ -6,7 +6,7 @@ Part 3 Instructions!
 Naviagete to /project
 Compile with javac -d . chess/utils/Color.java chess/utils/Utils.java chess/position/Position.java chess/pieces/Piece.java chess/pieces/Pawn.java chess/pieces/Rook.java chess/pieces/Knight.java chess/pieces/Bishop.java chess/pieces/Queen.java chess/pieces/King.java chess/board/Board.java chess/player/Player.java chess/game/Game.java chess/ChessBoard.java chess/Main.java
 
-
+ 
 Inside /project, run with java chess.ChessBoard.
 
 Structure
