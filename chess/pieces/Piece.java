@@ -5,6 +5,8 @@ import chess.position.Position;
 import chess.utils.Color;
 import java.util.List;
 
+import java.io.Serializable;
+
 /**
  *Abstract base class for all chess piece implemention.
  *
@@ -13,7 +15,7 @@ import java.util.List;
  *can legally reach ignoring check (check filtering is handled by
  *the Board.
  */
-public abstract class Piece
+public abstract class Piece implements Serializable
 {
 
     //The color the piece belongs to

@@ -5,6 +5,7 @@ import chess.position.Position;
 import chess.utils.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.Serializable;
 
 /**
  *Represents the chess board and manages game logic.
@@ -12,7 +13,7 @@ import java.util.List;
  *Initialises the board with pieces in their starting positions.
  *Detects check, checkmate, and stalemate.
  */
-public class Board
+public class Board implements Serializable
 {
 
     //The 8×8 grid
@@ -143,7 +144,9 @@ public class Board
 
     //Executes a move unconditionally
     //Updates the grid, moves the piece object, records a capture if any.
-    private void executeMove(Position from, Position to)
+
+    //phase-2 update: changed from private class to public for GUI function
+    public void executeMove(Position from, Position to)
     {
         Piece moving  = grid[from.getRow()][from.getCol()];
         Piece target  = grid[to.getRow()][to.getCol()];
