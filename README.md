@@ -12,42 +12,90 @@ Inside /project, run with java chess.ChessBoard.
 Structure
 ------------------------------------------------------------
 Your project folder should look like this before compiling:
+
 project/
+
 ├── chess/
+
 │   ├── Main.java
+
 │   ├── ChessBoard.java
+
 │   ├── board/
+
 │   │   └── Board.java
+
 │   ├── game/
+
 │   │   └── Game.java
+
 │   ├── pieces/
+
 │   │   ├── Piece.java
+
 │   │   ├── Pawn.java
+
 │   │   ├── Rook.java
+
 │   │   ├── Knight.java
+
 │   │   ├── Bishop.java
+
 │   │   ├── Queen.java
+
 │   │   └── King.java
+
 │   ├── player/
+
 │   │   └── Player.java
+
 │   ├── position/
+
 │   │   └── Position.java
+
 │   └── utils/
+
 │       ├── Color.java
+
 │       └── Utils.java
+
 └── resources/
+
+   │
     ├── WHITE_King.png
+    
+   │
     ├── WHITE_Queen.png
+    
+   │ 
     ├── WHITE_Rook.png
+    
+   │
     ├── WHITE_Bishop.png
+    
+   │
     ├── WHITE_Knight.png
+    
+   │
     ├── WHITE_Pawn.png
+    
+   │ 
     ├── BLACK_King.png
+    
+   │
     ├── BLACK_Queen.png
+    
+   │
     ├── BLACK_Rook.png
+    
+   │
     ├── BLACK_Bishop.png
+    
+   │
     ├── BLACK_Knight.png
-    └── BLACK_Pawn.png
+    
+   │
+   └── BLACK_Pawn.png
 
 
 
